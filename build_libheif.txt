@@ -1,0 +1,69 @@
+cmake --preset=release -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=armv7-a \
+        -DCMAKE_C_COMPILER=/tmp/ndk/bin/armv7a-linux-androideabi24-clang -DCMAKE_CXX_COMPILER=/tmp/ndk/bin/armv7a-linux-androideabi24-clang++ \
+        -DCMAKE_FIND_ROOT_PATH=/tmp/ndk/sysroot -DWITH_X265=ON -DWITH_LIBDE265=ON \
+        -DENABLE_PLUGIN_LOADING=OFF -DWITH_EXAMPLES=OFF -DWITH_LIBSHARPYUV=OFF \
+        -DWITH_AOM_DECODER=OFF -DWITH_AOM_ENCODER=OFF -DWITH_DAV1D=OFF -DWITH_FFMPEG_DECODER=OFF \
+        -DWITH_JPEG_DECODER=OFF -DWITH_JPEG_ENCODER=OFF -DWITH_KVAZAAR=OFF -DWITH_OPENJPH_ENCODER=OFF \
+        -DWITH_OpenJPEG_DECODER=OFF -DWITH_OpenJPEG_ENCODER=OFF -DWITH_RAV1E=OFF -DWITH_SvtEnc=OFF \
+        -DCMAKE_C_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_CXX_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-fPIE -pie" \
+        -DX265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/armeabi-v7a/include \
+        -DX265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/armeabi-v7a/lib/libx265.a \
+        -DLIBDE265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/armeabi-v7a/include \
+        -DLIBDE265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/armeabi-v7a/lib/libde265.a \
+        -DCMAKE_INSTALL_PREFIX=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libheif/armeabi-v7a \
+        -G "Unix Makefiles" ../../
+
+cmake --preset=release -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+        -DCMAKE_C_COMPILER=/tmp/ndk/bin/aarch64-linux-android24-clang -DCMAKE_CXX_COMPILER=/tmp/ndk/bin/aarch64-linux-android24-clang++ \
+        -DCMAKE_FIND_ROOT_PATH=/tmp/ndk/sysroot -DWITH_X265=ON -DWITH_LIBDE265=ON \
+        -DENABLE_PLUGIN_LOADING=OFF -DWITH_EXAMPLES=OFF -DWITH_LIBSHARPYUV=OFF \
+        -DWITH_AOM_DECODER=OFF -DWITH_AOM_ENCODER=OFF -DWITH_DAV1D=OFF -DWITH_FFMPEG_DECODER=OFF \
+        -DWITH_JPEG_DECODER=OFF -DWITH_JPEG_ENCODER=OFF -DWITH_KVAZAAR=OFF -DWITH_OPENJPH_ENCODER=OFF \
+        -DWITH_OpenJPEG_DECODER=OFF -DWITH_OpenJPEG_ENCODER=OFF -DWITH_RAV1E=OFF -DWITH_SvtEnc=OFF \
+        -DCMAKE_C_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_CXX_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-fPIE -pie" \
+        -DX265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/arm64-v8a/include \
+        -DX265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/arm64-v8a/lib/libx265.a \
+        -DLIBDE265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/arm64-v8a/include \
+        -DLIBDE265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/arm64-v8a/lib/libde265.a \
+        -DCMAKE_INSTALL_PREFIX=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libheif/arm64-v8a \
+        -G "Unix Makefiles" ../../
+
+cmake --preset=release -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=i686 \
+        -DCMAKE_C_COMPILER=/tmp/ndk/bin/i686-linux-android24-clang -DCMAKE_CXX_COMPILER=/tmp/ndk/bin/i686-linux-android24-clang++ \
+        -DCMAKE_FIND_ROOT_PATH=/tmp/ndk/sysroot -DWITH_X265=ON -DWITH_LIBDE265=ON \
+        -DENABLE_PLUGIN_LOADING=OFF -DWITH_EXAMPLES=OFF -DWITH_LIBSHARPYUV=OFF \
+        -DWITH_AOM_DECODER=OFF -DWITH_AOM_ENCODER=OFF -DWITH_DAV1D=OFF -DWITH_FFMPEG_DECODER=OFF \
+        -DWITH_JPEG_DECODER=OFF -DWITH_JPEG_ENCODER=OFF -DWITH_KVAZAAR=OFF -DWITH_OPENJPH_ENCODER=OFF \
+        -DWITH_OpenJPEG_DECODER=OFF -DWITH_OpenJPEG_ENCODER=OFF -DWITH_RAV1E=OFF -DWITH_SvtEnc=OFF \
+        -DCMAKE_C_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_CXX_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-fPIE -pie" \
+        -DX265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/x86/include \
+        -DX265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/x86/lib/libx265.a \
+        -DLIBDE265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/x86/include \
+        -DLIBDE265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/x86/lib/libde265.a \
+        -DCMAKE_INSTALL_PREFIX=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libheif/x86 \
+        -G "Unix Makefiles" ../../
+
+cmake --preset=release -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=x86-64 \
+        -DCMAKE_C_COMPILER=/tmp/ndk/bin/x86_64-linux-android24-clang -DCMAKE_CXX_COMPILER=/tmp/ndk/bin/x86_64-linux-android24-clang++ \
+        -DCMAKE_FIND_ROOT_PATH=/tmp/ndk/sysroot -DWITH_X265=ON -DWITH_LIBDE265=ON \
+        -DENABLE_PLUGIN_LOADING=OFF -DWITH_EXAMPLES=OFF -DWITH_LIBSHARPYUV=OFF \
+        -DWITH_AOM_DECODER=OFF -DWITH_AOM_ENCODER=OFF -DWITH_DAV1D=OFF -DWITH_FFMPEG_DECODER=OFF \
+        -DWITH_JPEG_DECODER=OFF -DWITH_JPEG_ENCODER=OFF -DWITH_KVAZAAR=OFF -DWITH_OPENJPH_ENCODER=OFF \
+        -DWITH_OpenJPEG_DECODER=OFF -DWITH_OpenJPEG_ENCODER=OFF -DWITH_RAV1E=OFF -DWITH_SvtEnc=OFF \
+        -DCMAKE_C_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_CXX_FLAGS="-fPIE -Wno-tautological-constant-compare" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-fPIE -pie" \
+        -DX265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/x86-64/include \
+        -DX265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/x265/x86-64/lib/libx265.a \
+        -DLIBDE265_INCLUDE_DIR=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/x86-64/include \
+        -DLIBDE265_LIBRARY=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libde265/x86-64/lib/libde265.a \
+        -DCMAKE_INSTALL_PREFIX=/Volumes/Extenal/Users/Shared/work/jaelyn/mi/libs/libheif/x86-64 \
+        -G "Unix Makefiles" ../../
+
+
