@@ -2360,6 +2360,109 @@ void HeifContext::Image::set_preencoded_hevc_image(const std::vector<uint8_t>& d
   m_heif_context->m_heif_file->add_property(m_id, hvcC, true);
 }
 
+Error HeifContext::add_image_data(const struct heif_image_data *input_data,
+                                  std::shared_ptr<Image>& out_image)
+{
+  if (!input_data) {
+    return Error(heif_error_Usage_error,
+                 heif_suberror_Null_pointer_argument);
+  }
+
+  if (input_data->format != heif_compression_HEVC) {
+    return Error(heif_error_Unsupported_filetype,
+                 heif_suberror_Unspecified,
+                 "Only support hvc1 image type");
+  }
+
+  heif_item_id image_id = m_heif_file->add_new_image("hvc1");
+  out_image = std::make_shared<Image>(this, image_id);
+
+//  heif_colorspace colorspace = input_data->colorspace;
+  heif_chroma chroma = input_data->chroma;
+
+  out_image->set_size(input_data->width, input_data->height);
+
+  auto hvcC = std::make_shared<Box_hvcC>();
+
+  const uint8_t *cdata = input_data->data.data();
+  size_t size = input_data->data.size();
+  size_t ptr = 0;
+
+  int encoded_width = 0;
+  int encoded_height = 0;
+
+  while (ptr < size) {
+    if (4 > size - ptr) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_End_of_data,
+                   "Invalid input data");
+    }
+    uint32_t nal_size = static_cast<uint32_t>((cdata[ptr] << 24) | (cdata[ptr + 1] << 16) | (cdata[ptr + 2] << 8) | (cdata[ptr + 3]));
+    ptr += 4;
+
+    if (nal_size > size - ptr) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_End_of_data,
+                   "Invalid input data");
+    }
+
+    const uint8_t NAL_SPS = 33;
+
+    if ((cdata[ptr] >> 1) == NAL_SPS) {
+      Box_hvcC::configuration config;
+
+      parse_sps_for_hvcC_configuration(cdata + ptr, nal_size, &config, &encoded_width, &encoded_height);
+
+      hvcC->set_configuration(config);
+    }
+
+    switch (cdata[ptr] >> 1) {
+      case 0x20:
+      case 0x21:
+      case 0x22:
+        hvcC->append_nal_data(cdata + ptr, nal_size);
+        break;
+      default:
+        m_heif_file->append_iloc_data_with_4byte_size(image_id, cdata + ptr, nal_size);
+        break;
+    }
+    ptr += nal_size;
+  }
+
+  if (!encoded_width || !encoded_height) {
+    return Error(heif_error_Invalid_input,
+                  heif_suberror_Invalid_image_size);
+  }
+
+  m_heif_file->add_property(image_id, hvcC, true);
+
+  m_heif_file->add_ispe_property(image_id, encoded_width, encoded_height);
+
+  if (input_data->width != encoded_width ||
+      input_data->height != encoded_height) {
+    m_heif_file->add_clap_property(image_id,
+                                   input_data->width,
+                                   input_data->height,
+                                   encoded_width,
+                                   encoded_height);
+
+    if (!is_integer_multiple_of_chroma_size(input_data->width,
+                                            input_data->height,
+                                            chroma)) {
+      out_image->mark_not_miaf_compatible();
+    }
+  }
+
+  m_heif_file->add_orientation_properties(image_id, heif_orientation_normal);
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  m_heif_file->set_brand(input_data->format,
+                         out_image->is_miaf_compatible());
+
+  return Error::Ok;
+}
 
 Error HeifContext::encode_image(const std::shared_ptr<HeifPixelImage>& pixel_image,
                                 struct heif_encoder* encoder,

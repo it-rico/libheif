@@ -59,21 +59,15 @@ int main(int argc, char** argv) {
         error = heif_context_get_image_handle(read_context, imageIds[i], &handle);
         assert(error.code == heif_error_Ok);
         
-        heif_image *image;
-        error = heif_decode_image(handle, &image, heif_colorspace_undefined, heif_chroma_undefined, nullptr);
+        heif_image_data *image_data;
+        error = heif_get_image_data(handle, &image_data);
         assert(error.code == heif_error_Ok);
-        
-        heif_encoder *encoder;
-        heif_context_get_encoder_for_format(write_context, heif_compression_HEVC, &encoder);
-        
-        heif_encoding_options *options = heif_encoding_options_alloc();
-        options->save_alpha_channel = 0;
         
         heif_image_handle *out_handle = nullptr;
-        error = heif_context_encode_image(write_context, image, encoder, options, &out_handle);
+        error = heif_context_add_image_data(write_context, image_data, &out_handle);
         assert(error.code == heif_error_Ok);
         
-        heif_image_release(image);
+        heif_image_data_release(image_data);
         
         int thumbnail_count = heif_image_handle_get_number_of_thumbnails(handle);
         heif_item_id thumbnail_ids[thumbnail_count];
@@ -83,20 +77,19 @@ int main(int argc, char** argv) {
             error = heif_image_handle_get_thumbnail(handle, thumbnail_ids[j], &thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            heif_image *thumbnail_image;
-            error = heif_decode_image(thumbnail_handle, &thumbnail_image, heif_colorspace_undefined, heif_chroma_undefined, nullptr);
+            
+            heif_image_data *thumbnail_image_data;
+            error = heif_get_image_data(thumbnail_handle, &thumbnail_image_data);
             assert(error.code == heif_error_Ok);
             
             heif_image_handle *out_thumbnail_handle = nullptr;
-            error = heif_context_encode_thumbnail(write_context, thumbnail_image, out_handle, encoder, options, INT_MAX, &out_thumbnail_handle);
+            error = heif_context_add_image_data(write_context, thumbnail_image_data, &out_thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            heif_image_release(thumbnail_image);
+            heif_image_data_release(thumbnail_image_data);
             heif_image_handle_release(thumbnail_handle);
             heif_image_handle_release(out_thumbnail_handle);
         }
-        heif_encoding_options_free(options);
-        heif_encoder_release(encoder);
         
         int metadata_count = heif_image_handle_get_number_of_metadata_blocks(handle, nullptr);
         heif_item_id metadata_ids[metadata_count];

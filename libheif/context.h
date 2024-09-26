@@ -410,6 +410,9 @@ public:
   // contain no valid data yet.
   void reset_to_empty_heif();
 
+  Error add_image_data(const struct heif_image_data *input_data,
+                     std::shared_ptr<Image>& out_image);
+
   Error encode_image(const std::shared_ptr<HeifPixelImage>& image,
                      struct heif_encoder* encoder,
                      const struct heif_encoding_options& options,
