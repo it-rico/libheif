@@ -42,11 +42,18 @@
 #include <memory>
 #include <getopt.h>
 #include <assert.h>
+#include <stdio.h>
 
-int main(int argc, char** argv) {
+void tofile(uint8_t *data, size_t size, const char *path) {
+    FILE *file = fopen(path, "wb");
+    fwrite(data, size, 1, file);
+    fflush(file);
+    fclose(file);
+}
+
+void test(const char *in_path, const char *out_path) {
     heif_context *read_context = heif_context_alloc();
-//    heif_error error = heif_context_read_from_file(read_context, "/Users/jaelyn/Downloads/heics/input.heic", nullptr);
-    heif_error error = heif_context_read_from_file(read_context, "/Users/jaelyn/Downloads/heics/C034.heic", nullptr);
+    heif_error error = heif_context_read_from_file(read_context, in_path, nullptr);
     assert(error.code == heif_error_Ok);
     
     heif_context *write_context = heif_context_alloc();
@@ -86,6 +93,9 @@ int main(int argc, char** argv) {
             error = heif_context_add_image_data(write_context, thumbnail_image_data, &out_thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
+            error = heif_context_assign_thumbnail(write_context, out_handle, out_thumbnail_handle);
+            assert(error.code == heif_error_Ok);
+            
             heif_image_data_release(thumbnail_image_data);
             heif_image_handle_release(thumbnail_handle);
             heif_image_handle_release(out_thumbnail_handle);
@@ -112,10 +122,17 @@ int main(int argc, char** argv) {
         heif_image_handle_release(out_handle);
     }
     heif_context_free(read_context);
-    
-//    error = heif_context_write_to_file(write_context, "/Users/jaelyn/Downloads/heics/output.heic");
-    error = heif_context_write_to_file(write_context, "/Users/jaelyn/Downloads/heics/C034_out.heic");
+    error = heif_context_write_to_file(write_context, out_path);
     assert(error.code == heif_error_Ok);
     heif_context_free(write_context);
+}
+
+int main(int argc, char** argv) {
+//    test("/Users/jaelyn/Downloads/heics/input.heic", "/Users/jaelyn/Downloads/heics/output.heic");
+    //    test("/Users/jaelyn/Downloads/heics/C034.heic", "/Users/jaelyn/Downloads/heics/output.heic");
+    //    test("/Users/jaelyn/Downloads/heics/exif.heic", "/Users/jaelyn/Downloads/heics/exif_output.heic");
+//    test("/Users/jaelyn/Downloads/IMG_5050.HEIC", "/Users/jaelyn/Downloads/heics/IMG_5050_output.heic");
+    test("/Users/jaelyn/Downloads/heics/IMG_5050_output.heic", "/Users/jaelyn/Downloads/heics/IMG_5050_output2.heic");
+//    test("/Users/jaelyn/Downloads/heics/output.heic", "/Users/jaelyn/Downloads/heics/output2.heic");
     return 0;
 }
