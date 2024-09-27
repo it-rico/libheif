@@ -1268,10 +1268,6 @@ void heif_image_handle_release(const struct heif_image_handle* handle)
   delete handle;
 }
 
-void heif_image_data_release(const struct heif_image_data* data) {
-  delete data;
-}
-
 heif_colorspace heif_image_get_colorspace(const struct heif_image* img)
 {
   return img->image->get_colorspace();

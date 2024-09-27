@@ -95,7 +95,6 @@ LIBHEIF_API int heif_get_version_number_maintenance(void);
 struct heif_context;
 struct heif_image_handle;
 struct heif_image;
-struct heif_image_data;
 
 
 enum heif_error_code
@@ -1041,9 +1040,6 @@ void heif_context_set_max_decoding_threads(struct heif_context* ctx, int max_thr
 // Release image handle.
 LIBHEIF_API
 void heif_image_handle_release(const struct heif_image_handle*);
-
-LIBHEIF_API
-void heif_image_data_release(const struct heif_image_data*);
 
 // Check whether the given image_handle is the primary image of the file.
 LIBHEIF_API

@@ -41,17 +41,6 @@ struct heif_image
 };
 
 
-struct heif_image_data
-{
-  heif_compression_format format;
-  heif_colorspace colorspace;
-  heif_chroma chroma;
-  int width;
-  int height;
-  std::vector<uint8_t> data;
-};
-
-
 struct heif_context
 {
   std::shared_ptr<HeifContext> context;
