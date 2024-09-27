@@ -410,8 +410,37 @@ public:
   // contain no valid data yet.
   void reset_to_empty_heif();
 
-  Error add_image_data(const struct heif_image_data *input_data,
-                     std::shared_ptr<Image>& out_image);
+  Error add_image(std::shared_ptr<HeifContext>& in_ctx,
+                  std::shared_ptr<Image>& in_image,
+                  std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_hevc(std::shared_ptr<HeifContext>& in_ctx,
+                            std::shared_ptr<Image>& in_image,
+                            std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_vvc(std::shared_ptr<HeifContext>& in_ctx,
+                           std::shared_ptr<Image>& in_image,
+                           std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_av1(std::shared_ptr<HeifContext>& in_ctx,
+                           std::shared_ptr<Image>& in_image,
+                           std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_jpeg(std::shared_ptr<HeifContext>& in_ctx,
+                            std::shared_ptr<Image>& in_image,
+                            std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_jpeg2000(std::shared_ptr<HeifContext>& in_ctx,
+                                std::shared_ptr<Image>& in_image,
+                                std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
+                            std::shared_ptr<Image>& in_image,
+                            std::shared_ptr<Image>& out_image);
+
+  Error add_image_from_mask(std::shared_ptr<HeifContext>& in_ctx,
+                            std::shared_ptr<Image>& in_image,
+                            std::shared_ptr<Image>& out_image);
 
   Error encode_image(const std::shared_ptr<HeifPixelImage>& image,
                      struct heif_encoder* encoder,

@@ -1061,42 +1061,6 @@ void heif_decoding_options_free(heif_decoding_options* options)
   delete options;
 }
 
-struct heif_error heif_get_image_data(const struct heif_image_handle* in_handle, 
-                                             struct heif_image_data** out_data)
-{
-  heif_image_data *data = new heif_image_data;
-  std::shared_ptr<HeifContext::Image> image = in_handle->image;
-  std::string image_type = in_handle->context->get_heif_file()->get_item_type(image->get_id());
-  if (image_type == "hvc1") {
-    data->format = heif_compression_HEVC;
-  }
-  else {
-    delete data;
-    return Error(heif_error_Unsupported_filetype,
-                 heif_suberror_Unspecified,
-                 "Only support hvc1 image type")
-                 .error_struct(image.get());
-  }
-
-  data->width = image->get_width();
-  data->height = image->get_height();
-  
-  Error err;
-  err = image->get_preferred_decoding_colorspace(&data->colorspace, &data->chroma);
-  if (err.error_code != heif_error_Ok) {
-    delete data;
-    return err.error_struct(image.get());
-  }
-
-  err = in_handle->context->get_heif_file()->get_compressed_image_data(image->get_id(), &data->data);
-  if (err.error_code != heif_error_Ok) {
-    delete data;
-    return err.error_struct(image.get());
-  }
-  *out_data = data;
-  return Error::Ok.error_struct(image.get());
-}
-
 struct heif_error heif_decode_image(const struct heif_image_handle* in_handle,
                                     struct heif_image** out_img,
                                     heif_colorspace colorspace,
@@ -2833,12 +2797,12 @@ void heif_encoding_options_free(heif_encoding_options* options)
   delete options;
 }
 
-struct heif_error heif_context_add_image_data(struct heif_context* ctx,
-                                              struct heif_image_data* input_data,
-                                              struct heif_image_handle** out_image_handle)
+struct heif_error heif_context_add_image(struct heif_context* ctx,
+                                         struct heif_image_handle* in_handle,
+                                         struct heif_image_handle** out_image_handle)
 {
   std::shared_ptr<HeifContext::Image> image;
-  Error err = ctx->context->add_image_data(input_data, image);
+  Error err = ctx->context->add_image(in_handle->context, in_handle->image, image);
 
   if (err != Error::Ok) {
     return err.error_struct(ctx->context.get());
@@ -2850,9 +2814,10 @@ struct heif_error heif_context_add_image_data(struct heif_context* ctx,
   }
 
   if (out_image_handle) {
-    *out_image_handle = new heif_image_handle;
-    (*out_image_handle)->image = image;
-    (*out_image_handle)->context = ctx->context;
+    heif_image_handle *handle = new heif_image_handle;
+    handle->image = image;
+    handle->context = ctx->context;
+    *out_image_handle = handle;
   }
 
   return heif_error_success;

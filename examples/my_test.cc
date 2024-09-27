@@ -66,15 +66,9 @@ void test(const char *in_path, const char *out_path) {
         error = heif_context_get_image_handle(read_context, imageIds[i], &handle);
         assert(error.code == heif_error_Ok);
         
-        heif_image_data *image_data;
-        error = heif_get_image_data(handle, &image_data);
-        assert(error.code == heif_error_Ok);
-        
         heif_image_handle *out_handle = nullptr;
-        error = heif_context_add_image_data(write_context, image_data, &out_handle);
+        error = heif_context_add_image(write_context, handle, &out_handle);
         assert(error.code == heif_error_Ok);
-        
-        heif_image_data_release(image_data);
         
         int thumbnail_count = heif_image_handle_get_number_of_thumbnails(handle);
         heif_item_id thumbnail_ids[thumbnail_count];
@@ -84,19 +78,13 @@ void test(const char *in_path, const char *out_path) {
             error = heif_image_handle_get_thumbnail(handle, thumbnail_ids[j], &thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            
-            heif_image_data *thumbnail_image_data;
-            error = heif_get_image_data(thumbnail_handle, &thumbnail_image_data);
-            assert(error.code == heif_error_Ok);
-            
             heif_image_handle *out_thumbnail_handle = nullptr;
-            error = heif_context_add_image_data(write_context, thumbnail_image_data, &out_thumbnail_handle);
+            error = heif_context_add_image(write_context, thumbnail_handle, &out_thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
             error = heif_context_assign_thumbnail(write_context, out_handle, out_thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            heif_image_data_release(thumbnail_image_data);
             heif_image_handle_release(thumbnail_handle);
             heif_image_handle_release(out_thumbnail_handle);
         }
@@ -132,7 +120,7 @@ int main(int argc, char** argv) {
     //    test("/Users/jaelyn/Downloads/heics/C034.heic", "/Users/jaelyn/Downloads/heics/output.heic");
     //    test("/Users/jaelyn/Downloads/heics/exif.heic", "/Users/jaelyn/Downloads/heics/exif_output.heic");
 //    test("/Users/jaelyn/Downloads/IMG_5050.HEIC", "/Users/jaelyn/Downloads/heics/IMG_5050_output.heic");
-    test("/Users/jaelyn/Downloads/heics/IMG_5050_output.heic", "/Users/jaelyn/Downloads/heics/IMG_5050_output2.heic");
+    test("/Users/rico/Downloads/heics/input.heic", "/Users/rico/Downloads/heics/output.heic");
 //    test("/Users/jaelyn/Downloads/heics/output.heic", "/Users/jaelyn/Downloads/heics/output2.heic");
     return 0;
 }
