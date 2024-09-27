@@ -2373,25 +2373,25 @@ Error HeifContext::add_image(std::shared_ptr<HeifContext>& in_ctx,
   if (image_type == "hvc1") {
     compression_format = heif_compression_HEVC;
     error = add_image_from_hevc(in_ctx, in_image, out_image);
-  // } else if (image_type == "vvc1") {
-  //   compression_format = heif_compression_VVC;
-  //   error = add_image_from_vvc(in_ctx, in_image, out_image);
-  // } else if (image_type == "av01") {
-  //   compression_format = heif_compression_AV1;
-  //   error = add_image_from_av1(in_ctx, in_image, out_image);
-  // } else if (image_type == "jpeg" ||
-  //           (image_type == "mime" && m_heif_file->get_content_type(ID) == "image/jpeg")) {
-  //   compression_format = heif_compression_JPEG;
-  //   error = add_image_from_jpeg(in_ctx, in_image, out_image);
-  // } else if (image_type == "j2k1") {
-  //   compression_format = heif_compression_JPEG2000;
-  //   error = add_image_from_jpeg2000(in_ctx, in_image, out_image);
-  // } else if (image_type == "grid") {
-  //   compression_format = heif_compression_uncompressed;
-  //   error = add_image_from_grid(in_ctx, in_image, out_image);
-  // } else if (image_type == "mski") {
-  //   compression_format = heif_compression_mask;
-  //   error = add_image_from_mask(in_ctx, in_image, out_image);
+  } else if (image_type == "vvc1") {
+    compression_format = heif_compression_VVC;
+    error = add_image_from_vvc(in_ctx, in_image, out_image);
+  } else if (image_type == "av01") {
+    compression_format = heif_compression_AV1;
+    error = add_image_from_av1(in_ctx, in_image, out_image);
+  } else if (image_type == "jpeg" ||
+            (image_type == "mime" && m_heif_file->get_content_type(ID) == "image/jpeg")) {
+    compression_format = heif_compression_JPEG;
+    error = add_image_from_jpeg(in_ctx, in_image, out_image);
+  } else if (image_type == "j2k1") {
+    compression_format = heif_compression_JPEG2000;
+    error = add_image_from_jpeg2000(in_ctx, in_image, out_image);
+  } else if (image_type == "grid") {
+    compression_format = heif_compression_uncompressed;
+    error = add_image_from_grid(in_ctx, in_image, out_image);
+  } else if (image_type == "mski") {
+    compression_format = heif_compression_mask;
+    error = add_image_from_mask(in_ctx, in_image, out_image);
   } else {
     return Error(heif_error_Unsupported_filetype,
                  heif_suberror_Unspecified,
@@ -2438,6 +2438,252 @@ Error HeifContext::add_image_from_hevc(std::shared_ptr<HeifContext>& in_ctx,
 
   m_top_level_images.push_back(out_image);
   m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_vvc(std::shared_ptr<HeifContext>& in_ctx,
+                                      std::shared_ptr<Image>& in_image,
+                                      std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("vvc1");
+  out_image = std::make_shared<Image>(this, image_id);
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  int input_width = in_image->get_width();
+  int input_height = in_image->get_height();
+
+  out_image->set_size(input_width, input_height);
+
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data);
+  
+  auto ipco_box = in_ctx->m_heif_file->get_ipco_box();
+  auto ipma_box = in_ctx->m_heif_file->get_ipma_box();
+  for (auto property : properties) {
+    auto essential = ipco_box->is_property_essential_for_item(in_image->get_id(), property, ipma_box);
+    m_heif_file->add_property(image_id, property, essential);
+  }
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_av1(std::shared_ptr<HeifContext>& in_ctx,
+                                      std::shared_ptr<Image>& in_image,
+                                      std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("av01");
+  out_image = std::make_shared<Image>(this, image_id);
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  int input_width = in_image->get_width();
+  int input_height = in_image->get_height();
+
+  out_image->set_size(input_width, input_height);
+
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data);
+  
+  auto ipco_box = in_ctx->m_heif_file->get_ipco_box();
+  auto ipma_box = in_ctx->m_heif_file->get_ipma_box();
+  for (auto property : properties) {
+    auto essential = ipco_box->is_property_essential_for_item(in_image->get_id(), property, ipma_box);
+    m_heif_file->add_property(image_id, property, essential);
+  }
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_jpeg(std::shared_ptr<HeifContext>& in_ctx,
+                                      std::shared_ptr<Image>& in_image,
+                                      std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("jpeg");
+  out_image = std::make_shared<Image>(this, image_id);
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  int input_width = in_image->get_width();
+  int input_height = in_image->get_height();
+
+  out_image->set_size(input_width, input_height);
+
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data);
+  
+  auto ipco_box = in_ctx->m_heif_file->get_ipco_box();
+  auto ipma_box = in_ctx->m_heif_file->get_ipma_box();
+  for (auto property : properties) {
+    auto essential = ipco_box->is_property_essential_for_item(in_image->get_id(), property, ipma_box);
+    m_heif_file->add_property(image_id, property, essential);
+  }
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_jpeg2000(std::shared_ptr<HeifContext>& in_ctx,
+                                      std::shared_ptr<Image>& in_image,
+                                      std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("j2k1");
+  out_image = std::make_shared<Image>(this, image_id);
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  int input_width = in_image->get_width();
+  int input_height = in_image->get_height();
+
+  out_image->set_size(input_width, input_height);
+
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data);
+  
+  auto ipco_box = in_ctx->m_heif_file->get_ipco_box();
+  auto ipma_box = in_ctx->m_heif_file->get_ipma_box();
+  for (auto property : properties) {
+    auto essential = ipco_box->is_property_essential_for_item(in_image->get_id(), property, ipma_box);
+    m_heif_file->add_property(image_id, property, essential);
+  }
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_mask(std::shared_ptr<HeifContext>& in_ctx,
+                                       std::shared_ptr<Image>& in_image,
+                                       std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("mski");
+  out_image = std::make_shared<Image>(this, image_id);
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  int input_width = in_image->get_width();
+  int input_height = in_image->get_height();
+
+  out_image->set_size(input_width, input_height);
+
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data);
+  
+  auto ipco_box = in_ctx->m_heif_file->get_ipco_box();
+  auto ipma_box = in_ctx->m_heif_file->get_ipma_box();
+  for (auto property : properties) {
+    auto essential = ipco_box->is_property_essential_for_item(in_image->get_id(), property, ipma_box);
+    m_heif_file->add_property(image_id, property, essential);
+  }
+
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  return Error::Ok;
+}
+
+Error HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
+                                       std::shared_ptr<Image>& in_image,
+                                       std::shared_ptr<Image>& out_image)
+{
+  heif_item_id image_id = m_heif_file->add_new_image("grid");
+  out_image = std::make_shared<Image>(this, image_id);
+  Error err;
+  
+  auto in_iref_box = in_ctx->m_heif_file->get_iref_box();
+  if (!in_iref_box) {
+    return Error(heif_error_Invalid_input,
+                 heif_suberror_No_iref_box,
+                 "No iref box available, but needed for grid image");
+  }
+  std::vector<heif_item_id> in_image_references = in_iref_box->get_references(in_image->get_id(), fourcc("dimg"));
+  std::vector<heif_item_id> tile_ids;
+  for (heif_item_id in_reference: in_image_references) {
+    auto iter = in_ctx->m_all_images.find(in_reference);
+    if (iter == m_all_images.end()) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_Missing_grid_images,
+                   "Nonexistent grid image referenced");
+    }
+    std::shared_ptr<Image> in_tile = iter->second;
+    std::shared_ptr<Image> out_tile;
+    err = add_image(in_ctx, in_tile, out_tile);
+    if (err) {
+      return err;
+    }
+    heif_item_id tile_id = out_tile->get_id();
+    m_heif_file->get_infe_box(tile_id)->set_hidden_item(true);
+    tile_ids.push_back(tile_id);
+  }
+
+  std::vector<uint8_t> data;
+  err = in_ctx->m_heif_file->get_compressed_image_data(in_image->get_id(), &data);
+  if (err) {
+    return err;
+  }
+  m_heif_file->append_iloc_data(image_id, data, 1);
+
+  m_heif_file->add_iref_reference(image_id, fourcc("dimg"), tile_ids);
+
+  auto ispe_box = in_ctx->m_heif_file->get_property<Box_ispe>(in_image->get_id());  
+  if (ispe_box) {
+    m_heif_file->add_property(image_id, ispe_box, false);
+  }
 
   return Error::Ok;
 }
