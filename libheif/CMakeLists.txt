@@ -82,82 +82,82 @@ set(libheif_sources
         color-conversion/chroma_sampling.h
         ${libheif_headers})
 
-add_library(heif ${libheif_sources})
+add_library(cameraheif ${libheif_sources})
 
 if (ENABLE_PLUGIN_LOADING)
     if (WIN32)
-        target_sources(heif PRIVATE plugins_windows.cc plugins_windows.h)
+        target_sources(cameraheif PRIVATE plugins_windows.cc plugins_windows.h)
     else ()
-        target_sources(heif PRIVATE plugins_unix.cc plugins_unix.h)
+        target_sources(cameraheif PRIVATE plugins_unix.cc plugins_unix.h)
     endif ()
 endif ()
 
 # Needed to find libheif/heif_version.h while compiling the library
-target_include_directories(heif PRIVATE ${libheif_BINARY_DIR} ${libheif_SOURCE_DIR}/libheif ${libheif_SOURCE_DIR}/libheif/api)
+target_include_directories(cameraheif PRIVATE ${libheif_BINARY_DIR} ${libheif_SOURCE_DIR}/libheif ${libheif_SOURCE_DIR}/libheif/api)
 
 # Propagate include/libheif to consume the headers from other projects
-target_include_directories(heif
+target_include_directories(cameraheif
         PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 
-set_target_properties(heif
+set_target_properties(cameraheif
         PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR})
 
 if (APPLE)
-    set_target_properties(heif
+    set_target_properties(cameraheif
             PROPERTIES
 	    LINK_FLAGS "-Wl,-compatibility_version,${MACOS_COMPATIBLE_VERSION}")
 endif ()
 
-target_compile_definitions(heif
+target_compile_definitions(cameraheif
         PUBLIC
         LIBHEIF_EXPORTS
         HAVE_VISIBILITY)
 
 if (PLUGIN_LOADING_SUPPORTED_AND_ENABLED)
-    target_compile_definitions(heif PRIVATE ENABLE_PLUGIN_LOADING=1)
-    target_link_libraries(heif PRIVATE ${CMAKE_DL_LIBS})
+    target_compile_definitions(cameraheif PRIVATE ENABLE_PLUGIN_LOADING=1)
+    target_link_libraries(cameraheif PRIVATE ${CMAKE_DL_LIBS})
 endif ()
 
 add_subdirectory(plugins)
 
 if (LIBSHARPYUV_FOUND)
     message("Compiling in 'libsharpyuv'")
-    target_compile_definitions(heif PUBLIC HAVE_LIBSHARPYUV=1)
-    target_include_directories(heif PRIVATE ${LIBSHARPYUV_INCLUDE_DIRS})
-    target_link_libraries(heif PRIVATE ${LIBSHARPYUV_LIBRARIES})
+    target_compile_definitions(cameraheif PUBLIC HAVE_LIBSHARPYUV=1)
+    target_include_directories(cameraheif PRIVATE ${LIBSHARPYUV_INCLUDE_DIRS})
+    target_link_libraries(cameraheif PRIVATE ${LIBSHARPYUV_LIBRARIES})
 else ()
     message("Not compiling 'libsharpyuv'")
 endif ()
 
 if (ZLIB_FOUND)
-    target_compile_definitions(heif PRIVATE HAVE_ZLIB=1)
-    target_link_libraries(heif PRIVATE ZLIB::ZLIB)
+    target_compile_definitions(cameraheif PRIVATE HAVE_ZLIB=1)
+    target_link_libraries(cameraheif PRIVATE ZLIB::ZLIB)
 endif ()
 
 if (Brotli_FOUND)
-    target_compile_definitions(heif PUBLIC HAVE_BROTLI=1)
-    target_include_directories(heif PRIVATE ${BROTLI_INCLUDE_DIRS})
-    target_link_libraries(heif PRIVATE ${BROTLI_LIBS})
+    target_compile_definitions(cameraheif PUBLIC HAVE_BROTLI=1)
+    target_include_directories(cameraheif PRIVATE ${BROTLI_INCLUDE_DIRS})
+    target_link_libraries(cameraheif PRIVATE ${BROTLI_LIBS})
 endif()
 
 if (ENABLE_MULTITHREADING_SUPPORT)
     find_package(Threads)
-    target_link_libraries(heif PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(cameraheif PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
-    target_compile_definitions(heif PRIVATE ENABLE_MULTITHREADING_SUPPORT=1)
+    target_compile_definitions(cameraheif PRIVATE ENABLE_MULTITHREADING_SUPPORT=1)
     if (ENABLE_PARALLEL_TILE_DECODING)
-        target_compile_definitions(heif PRIVATE ENABLE_PARALLEL_TILE_DECODING=1)
+        target_compile_definitions(cameraheif PRIVATE ENABLE_PARALLEL_TILE_DECODING=1)
     endif ()
 endif ()
 
 if (WITH_UNCOMPRESSED_CODEC)
-    target_compile_definitions(heif PUBLIC WITH_UNCOMPRESSED_CODEC=1)
-    target_sources(heif PRIVATE
+    target_compile_definitions(cameraheif PUBLIC WITH_UNCOMPRESSED_CODEC=1)
+    target_sources(cameraheif PRIVATE
             codecs/uncompressed_box.h
             codecs/uncompressed_box.cc
             codecs/uncompressed_image.h
@@ -166,7 +166,7 @@ endif ()
 
 write_basic_package_version_file(${PROJECT_NAME}-config-version.cmake COMPATIBILITY ExactVersion)
 
-install(TARGETS heif EXPORT ${PROJECT_NAME}-config
+install(TARGETS cameraheif EXPORT ${PROJECT_NAME}-config
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
