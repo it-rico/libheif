@@ -26,10 +26,10 @@ macro(plugin_compilation name varName foundName optionName defineName)
                     )
         else ()
             message("Compiling '" ${name} "' as built-in backend")
-            target_sources(heif PRIVATE ${${optionName}_sources})
-            target_compile_definitions(heif PRIVATE HAVE_${defineName}=1)
-            target_include_directories(heif PRIVATE ${${varName}_INCLUDE_DIRS})
-            target_link_libraries(heif PRIVATE ${${varName}_LIBRARIES})
+            target_sources(cameraheif PRIVATE ${${optionName}_sources})
+            target_compile_definitions(cameraheif PRIVATE HAVE_${defineName}=1)
+            target_include_directories(cameraheif PRIVATE ${${varName}_INCLUDE_DIRS})
+            target_link_libraries(cameraheif PRIVATE ${${varName}_LIBRARIES})
         endif ()
 
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${${varName}_CFLAGS}")
@@ -108,12 +108,12 @@ set(VVENC_sources encoder_vvenc.cc encoder_vvenc.h)
 set(VVENC_extra_plugin_sources)
 plugin_compilation(vvenc vvenc vvenc_FOUND VVENC VVENC)
 
-target_sources(heif PRIVATE
+target_sources(cameraheif PRIVATE
                encoder_mask.h
                encoder_mask.cc)
 
 if (WITH_UNCOMPRESSED_CODEC)
-    target_sources(heif PRIVATE
+    target_sources(cameraheif PRIVATE
             encoder_uncompressed.h
             encoder_uncompressed.cc)
 endif ()
