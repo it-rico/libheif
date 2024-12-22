@@ -10,12 +10,6 @@ if (MSVC)
     include_directories("../extra")
 endif ()
 
-add_executable(my-test ${getopt_sources}
-        my_test.cc
-        common.cc
-        common.h)
-target_link_libraries(my-test heif)
-
 add_executable(heif-info ${getopt_sources}
         heif_info.cc
         common.cc
