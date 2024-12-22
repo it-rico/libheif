@@ -390,6 +390,8 @@ public:
 
   bool has_alpha(heif_item_id ID) const;
 
+  Error get_jpeg_data(heif_item_id ID, struct heif_jpeg_data *out_data) const;
+  
   Error decode_image_user(heif_item_id ID, std::shared_ptr<HeifPixelImage>& img,
                           heif_colorspace out_colorspace,
                           heif_chroma out_chroma,
@@ -442,6 +444,12 @@ public:
                             std::shared_ptr<Image>& in_image,
                             std::shared_ptr<Image>& out_image);
 
+  Error add_jpeg_image(std::shared_ptr<HeifContext>& in_ctx,
+                       const std::vector<uint8_t>& jpeg_data,
+                       uint32_t width,
+                       uint32_t height,
+                       std::shared_ptr<Image>& out_image);
+    
   Error encode_image(const std::shared_ptr<HeifPixelImage>& image,
                      struct heif_encoder* encoder,
                      const struct heif_encoding_options& options,
