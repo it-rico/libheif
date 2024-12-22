@@ -1552,6 +1552,16 @@ struct heif_decoding_options* heif_decoding_options_alloc(void);
 LIBHEIF_API
 void heif_decoding_options_free(struct heif_decoding_options*);
 
+struct heif_jpeg_data {
+  uint8_t *data;
+  size_t size;
+  uint32_t width;
+  uint32_t height;
+};
+
+LIBHEIF_API
+struct heif_error heif_get_jpeg_data(const struct heif_image_handle* in_handle, struct heif_jpeg_data *out_data);
+
 // Decode an heif_image_handle into the actual pixel image and also carry out
 // all geometric transformations specified in the HEIF file (rotation, cropping, mirroring).
 //
@@ -2118,6 +2128,11 @@ LIBHEIF_API
 struct heif_error heif_context_add_image(struct heif_context* ctx,
                                          struct heif_image_handle* in_handle,
                                          struct heif_image_handle** out_image_handle);
+
+LIBHEIF_API
+struct heif_error heif_context_add_jpeg_image(struct heif_context* ctx,
+                                              const struct heif_jpeg_data *data,
+                                              struct heif_image_handle** out_image_handle);
 // Compress the input image.
 // Returns a handle to the coded image in 'out_image_handle' unless out_image_handle = NULL.
 // 'options' should be NULL for now.
