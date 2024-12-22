@@ -1746,6 +1746,22 @@ Error HeifContext::decode_image_planar(heif_item_id ID,
   return Error::Ok;
 }
 
+Error HeifContext::get_jpeg_data(heif_item_id ID, struct heif_jpeg_data *out_data) const
+{
+  Error error;
+  
+  std::vector<uint8_t> data;
+  error = m_heif_file->get_compressed_image_data(ID, &data);
+  if (error) {
+    return error;
+  }
+  
+  out_data->data = (uint8_t *)malloc(data.size());
+  out_data->size = data.size();
+  memcpy(out_data->data, data.data(), data.size());
+  
+  return Error::Ok;
+}
 
 // This function only works with RGB images.
 Error HeifContext::decode_full_grid_image(heif_item_id ID,
@@ -2685,6 +2701,42 @@ Error HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
     m_heif_file->add_property(image_id, ispe_box, false);
   }
 
+  return Error::Ok;
+}
+
+Error HeifContext::add_jpeg_image(std::shared_ptr<HeifContext>& in_ctx,
+                                  const std::vector<uint8_t>& jpeg_data,
+                                  uint32_t width,
+                                  uint32_t height,
+                                  std::shared_ptr<Image>& out_image)
+{
+  Error error;
+  
+  heif_item_id image_id = m_heif_file->add_new_image("jpeg");
+  
+  out_image = std::make_shared<Image>(this, image_id);
+  m_top_level_images.push_back(out_image);
+  m_all_images[image_id] = out_image;
+
+  // JPEG always uses CCIR-601
+  heif_color_profile_nclx target_heif_nclx;
+  target_heif_nclx.matrix_coefficients = heif_matrix_coefficients_ITU_R_BT_601_6;
+  target_heif_nclx.color_primaries = heif_color_primaries_ITU_R_BT_601_6;
+  target_heif_nclx.transfer_characteristics = heif_transfer_characteristic_ITU_R_BT_601_6;
+  target_heif_nclx.full_range_flag = true;
+
+  auto target_nclx_profile = std::make_shared<color_profile_nclx>();
+  target_nclx_profile->set_from_heif_color_profile_nclx(&target_heif_nclx);
+
+  // --- choose which color profile to put into 'colr' box
+  m_heif_file->set_color_profile(image_id, target_nclx_profile);
+  
+  m_heif_file->append_iloc_data(image_id, jpeg_data);
+  
+  m_heif_file->add_ispe_property(image_id, width, height);
+  
+  m_heif_file->set_brand(heif_compression_JPEG, out_image->is_miaf_compatible());
+  
   return Error::Ok;
 }
 
