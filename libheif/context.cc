@@ -2403,8 +2403,12 @@ Error HeifContext::add_image(std::shared_ptr<HeifContext>& in_ctx,
     compression_format = heif_compression_JPEG2000;
     error = add_image_from_jpeg2000(in_ctx, in_image, out_image);
   } else if (image_type == "grid") {
-    compression_format = heif_compression_uncompressed;
     error = add_image_from_grid(in_ctx, in_image, out_image);
+    // Set Brands
+    if (out_image->is_miaf_compatible()) {
+      m_heif_file->get_ftyp_box()->add_compatible_brand(heif_brand2_miaf);
+    }
+    return error;
   } else if (image_type == "mski") {
     compression_format = heif_compression_mask;
     error = add_image_from_mask(in_ctx, in_image, out_image);
@@ -2657,8 +2661,6 @@ Error HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
                                        std::shared_ptr<Image>& in_image,
                                        std::shared_ptr<Image>& out_image)
 {
-  heif_item_id image_id = m_heif_file->add_new_image("grid");
-  out_image = std::make_shared<Image>(this, image_id);
   Error err;
   
   auto in_iref_box = in_ctx->m_heif_file->get_iref_box();
@@ -2671,7 +2673,7 @@ Error HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
   std::vector<heif_item_id> tile_ids;
   for (heif_item_id in_reference: in_image_references) {
     auto iter = in_ctx->m_all_images.find(in_reference);
-    if (iter == m_all_images.end()) {
+    if (iter == in_ctx->m_all_images.end()) {
       return Error(heif_error_Invalid_input,
                    heif_suberror_Missing_grid_images,
                    "Nonexistent grid image referenced");
@@ -2687,19 +2689,25 @@ Error HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
     tile_ids.push_back(tile_id);
   }
 
-  std::vector<uint8_t> data;
-  err = in_ctx->m_heif_file->get_compressed_image_data(in_image->get_id(), &data);
+  heif_item_id grid_id = m_heif_file->add_new_image("grid");
+  out_image = std::make_shared<Image>(this, grid_id);
+  m_all_images.insert(std::make_pair(grid_id, out_image));
+
+  std::vector<uint8_t> grid_data;
+  err = in_ctx->m_heif_file->get_compressed_image_data(in_image->get_id(), &grid_data);
   if (err) {
     return err;
   }
-  m_heif_file->append_iloc_data(image_id, data, 1);
 
-  m_heif_file->add_iref_reference(image_id, fourcc("dimg"), tile_ids);
+  ImageGrid grid;
+  grid.parse(grid_data);
+  const int construction_method = 1; // 0=mdat 1=idat
+  m_heif_file->append_iloc_data(grid_id, grid_data, construction_method);
 
-  auto ispe_box = in_ctx->m_heif_file->get_property<Box_ispe>(in_image->get_id());  
-  if (ispe_box) {
-    m_heif_file->add_property(image_id, ispe_box, false);
-  }
+  m_heif_file->add_iref_reference(grid_id, fourcc("dimg"), tile_ids);
+
+  // Add ISPE property
+  m_heif_file->add_ispe_property(grid_id, grid.get_width(), grid.get_height());
 
   return Error::Ok;
 }
