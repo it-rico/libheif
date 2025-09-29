@@ -26,15 +26,15 @@ macro(plugin_compilation name varName foundName optionName defineName)
                     )
         else ()
             message("Compiling '" ${name} "' as built-in backend")
-            target_sources(heif PRIVATE ${${optionName}_sources})
-            target_compile_definitions(heif PRIVATE HAVE_${defineName}=1)
-            target_include_directories(heif PRIVATE ${${varName}_INCLUDE_DIRS})
-            target_link_directories(heif PRIVATE ${${varName}_LINK_DIRS})
+            target_sources(cameraheif PRIVATE ${${optionName}_sources})
+            target_compile_definitions(cameraheif PRIVATE HAVE_${defineName}=1)
+            target_include_directories(cameraheif PRIVATE ${${varName}_INCLUDE_DIRS})
+            target_link_directories(cameraheif PRIVATE ${${varName}_LINK_DIRS})
             if (${varName}_DEBUG_LIBRARY)
-                target_link_libraries(heif PRIVATE debug ${${varName}_DEBUG_LIBRARY})
-                target_link_libraries(heif PRIVATE optimized ${${varName}_LIBRARIES})
+                target_link_libraries(cameraheif PRIVATE debug ${${varName}_DEBUG_LIBRARY})
+                target_link_libraries(cameraheif PRIVATE optimized ${${varName}_LIBRARIES})
             else()
-                target_link_libraries(heif PRIVATE ${${varName}_LIBRARIES})
+                target_link_libraries(cameraheif PRIVATE ${${varName}_LIBRARIES})
             endif()
         endif ()
 
@@ -117,14 +117,14 @@ set(OpenH264_DECODER_sources decoder_openh264.cc decoder_openh264.h)
 set(OpenH264_DECODER_extra_plugin_sources)
 plugin_compilation(openh264dec OpenH264 OpenH264_DECODER_FOUND OpenH264_DECODER OpenH264_DECODER)
 
-target_sources(heif PRIVATE
+target_sources(cameraheif PRIVATE
                encoder_mask.h
                encoder_mask.cc
                nalu_utils.h
                nalu_utils.cc)
 
 if (WITH_UNCOMPRESSED_CODEC)
-    target_sources(heif PRIVATE
+    target_sources(cameraheif PRIVATE
             encoder_uncompressed.h
             encoder_uncompressed.cc
             decoder_uncompressed.h
