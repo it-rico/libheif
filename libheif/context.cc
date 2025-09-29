@@ -1194,6 +1194,24 @@ Error HeifContext::get_id_of_non_virtual_child_image(heif_item_id id, heif_item_
 }
 
 
+Error HeifContext::get_jpeg_data(heif_item_id ID, heif_jpeg_data *out_data) const
+{
+  Error error;
+  
+  std::vector<uint8_t> data;
+  error = m_heif_file->get_uncompressed_item_data(ID, &data);
+  if (error) {
+    return error;
+  }
+  
+  out_data->data = (uint8_t *)malloc(data.size());
+  out_data->size = data.size();
+  memcpy(out_data->data, data.data(), data.size());
+  
+  return Error::Ok;
+}
+
+
 Result<std::shared_ptr<HeifPixelImage>> HeifContext::decode_image(heif_item_id ID,
                                                                   heif_colorspace out_colorspace,
                                                                   heif_chroma out_chroma,
@@ -1404,6 +1422,38 @@ Result<std::shared_ptr<ImageItem>> HeifContext::add_image_from_grid(std::shared_
   m_heif_file->add_ispe_property(grid_id, grid.get_width(), grid.get_height(), false);
   
   return output_image_item;
+}
+
+
+Result<std::shared_ptr<ImageItem>> HeifContext::add_jpeg_image(std::shared_ptr<HeifContext>& in_ctx,
+                                                               const std::vector<uint8_t>& jpeg_data,
+                                                               uint32_t width,
+                                                               uint32_t height)
+{
+  heif_item_id image_id = m_heif_file->add_new_image(fourcc("jpeg"));
+  std::shared_ptr<ImageItem> out_image = std::make_shared<ImageItem_JPEG>(this, image_id);
+  m_all_images[image_id] = out_image;
+
+  // JPEG always uses CCIR-601
+  heif_color_profile_nclx target_heif_nclx;
+  target_heif_nclx.matrix_coefficients = heif_matrix_coefficients_ITU_R_BT_601_6;
+  target_heif_nclx.color_primaries = heif_color_primaries_ITU_R_BT_601_6;
+  target_heif_nclx.transfer_characteristics = heif_transfer_characteristic_ITU_R_BT_601_6;
+  target_heif_nclx.full_range_flag = true;
+
+  auto target_nclx_profile = std::make_shared<color_profile_nclx>();
+  target_nclx_profile->set_from_heif_color_profile_nclx(&target_heif_nclx);
+
+  // --- choose which color profile to put into 'colr' box
+  out_image->set_color_profile(target_nclx_profile);
+  
+  m_heif_file->append_iloc_data(image_id, jpeg_data, 0);
+  
+  m_heif_file->add_ispe_property(image_id, width, height, false);
+  
+//  m_heif_file->set_brand(heif_compression_JPEG, out_image->is_miaf_compatible());
+  
+  return out_image;
 }
 
 
