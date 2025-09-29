@@ -416,31 +416,12 @@ public:
                   std::shared_ptr<Image>& in_image,
                   std::shared_ptr<Image>& out_image);
 
-  Error add_image_from_hevc(std::shared_ptr<HeifContext>& in_ctx,
-                            std::shared_ptr<Image>& in_image,
-                            std::shared_ptr<Image>& out_image);
-
-  Error add_image_from_vvc(std::shared_ptr<HeifContext>& in_ctx,
-                           std::shared_ptr<Image>& in_image,
-                           std::shared_ptr<Image>& out_image);
-
-  Error add_image_from_av1(std::shared_ptr<HeifContext>& in_ctx,
-                           std::shared_ptr<Image>& in_image,
-                           std::shared_ptr<Image>& out_image);
-
-  Error add_image_from_jpeg(std::shared_ptr<HeifContext>& in_ctx,
-                            std::shared_ptr<Image>& in_image,
-                            std::shared_ptr<Image>& out_image);
-
-  Error add_image_from_jpeg2000(std::shared_ptr<HeifContext>& in_ctx,
-                                std::shared_ptr<Image>& in_image,
-                                std::shared_ptr<Image>& out_image);
+  Error add_image_from_normal(const std::string& item_type,
+                              std::shared_ptr<HeifContext>& in_ctx,
+                              std::shared_ptr<Image>& in_image,
+                              std::shared_ptr<Image>& out_image);
 
   Error add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx,
-                            std::shared_ptr<Image>& in_image,
-                            std::shared_ptr<Image>& out_image);
-
-  Error add_image_from_mask(std::shared_ptr<HeifContext>& in_ctx,
                             std::shared_ptr<Image>& in_image,
                             std::shared_ptr<Image>& out_image);
 
