@@ -2114,6 +2114,10 @@ LIBHEIF_API
 void heif_encoding_options_free(struct heif_encoding_options*);
 
 
+LIBHEIF_API
+struct heif_error heif_context_add_image(struct heif_context* ctx,
+                                         struct heif_image_handle* in_handle,
+                                         struct heif_image_handle** out_image_handle);
 // Compress the input image.
 // Returns a handle to the coded image in 'out_image_handle' unless out_image_handle = NULL.
 // 'options' should be NULL for now.

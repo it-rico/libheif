@@ -2352,7 +2352,6 @@ bool Box_ipco::is_property_essential_for_item(heif_item_id itemId,
     }
   }
 
-  assert(false); // non-existing property
   return false;
 }
 
@@ -2479,7 +2478,6 @@ bool Box_ipma::is_property_essential_for_item(heif_item_id itemId, int propertyI
     }
   }
 
-  assert(false);
   return false;
 }
 
