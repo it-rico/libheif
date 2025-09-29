@@ -102,6 +102,8 @@ public:
 
   bool has_alpha(heif_item_id ID) const;
 
+  Error get_jpeg_data(heif_item_id ID, heif_jpeg_data *out_data) const;
+
   Result<std::shared_ptr<HeifPixelImage>> decode_image(heif_item_id ID,
                                                        heif_colorspace out_colorspace,
                                                        heif_chroma out_chroma,
@@ -132,6 +134,11 @@ public:
   Result<std::shared_ptr<ImageItem>> add_image_from_normal(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
 
   Result<std::shared_ptr<ImageItem>> add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
+
+  Result<std::shared_ptr<ImageItem>> add_jpeg_image(std::shared_ptr<HeifContext>& in_ctx,
+                                                    const std::vector<uint8_t>& jpeg_data,
+                                                    uint32_t width,
+                                                    uint32_t height);
 
   Result<std::shared_ptr<ImageItem>> encode_image(const std::shared_ptr<HeifPixelImage>& image,
                                                   struct heif_encoder* encoder,
