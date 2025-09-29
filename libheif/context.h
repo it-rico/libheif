@@ -127,6 +127,12 @@ public:
   // contain no valid data yet.
   void reset_to_empty_heif();
 
+  Result<std::shared_ptr<ImageItem>> add_image(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
+  
+  Result<std::shared_ptr<ImageItem>> add_image_from_normal(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
+
+  Result<std::shared_ptr<ImageItem>> add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
+
   Result<std::shared_ptr<ImageItem>> encode_image(const std::shared_ptr<HeifPixelImage>& image,
                                                   struct heif_encoder* encoder,
                                                   const struct heif_encoding_options& options,

@@ -1242,6 +1242,75 @@ std::wstring HeifFile::convert_utf8_path_to_utf16(std::string str)
 }
 #endif
 
+void HeifFile::set_brand(heif_compression_format format, bool miaf_compatible)
+{
+  // Note: major brand should be repeated in the compatible brands, according to this:
+  //   ISOBMFF (ISO/IEC 14496-12:2020) § K.4:
+  //   NOTE This document requires that the major brand be repeated in the compatible-brands,
+  //   but this requirement is relaxed in the 'profiles' parameter for compactness.
+  // See https://github.com/strukturag/libheif/issues/478
+
+  switch (format) {
+    case heif_compression_HEVC:
+      m_ftyp_box->set_major_brand(heif_brand2_heic);
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
+      m_ftyp_box->add_compatible_brand(heif_brand2_heic);
+      break;
+
+    case heif_compression_AV1:
+      m_ftyp_box->set_major_brand(heif_brand2_avif);
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_avif);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
+      break;
+
+    case heif_compression_VVC:
+      m_ftyp_box->set_major_brand(heif_brand2_vvic);
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
+      m_ftyp_box->add_compatible_brand(heif_brand2_vvic);
+      break;
+
+    case heif_compression_JPEG:
+      m_ftyp_box->set_major_brand(heif_brand2_jpeg);
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_jpeg);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
+      break;
+
+    case heif_compression_uncompressed:
+      // Not clear what the correct major brand should be
+      m_ftyp_box->set_major_brand(heif_brand2_mif2);
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(heif_brand2_mif1);
+      break;
+
+    case heif_compression_JPEG2000:
+    case heif_compression_HTJ2K:
+      m_ftyp_box->set_major_brand(fourcc("j2ki"));
+      m_ftyp_box->set_minor_version(0);
+      m_ftyp_box->add_compatible_brand(fourcc("mif1"));
+      m_ftyp_box->add_compatible_brand(fourcc("j2ki"));
+      break;
+
+    default:
+      break;
+  }
+
+  if (miaf_compatible) {
+    m_ftyp_box->add_compatible_brand(heif_brand2_miaf);
+  }
+
+#if 0
+  // Temporarily disabled, pending resolution of
+  // https://github.com/strukturag/libheif/issues/888
+  if (get_num_images() == 1) {
+    // This could be overly conservative, but is safe
+    m_ftyp_box->add_compatible_brand(heif_brand2_1pic);
+  }
+#endif
+}
 
 Result<size_t> HeifFile::write_mdat(StreamWriter& writer)
 {

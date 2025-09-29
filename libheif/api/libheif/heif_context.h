@@ -322,6 +322,11 @@ heif_error heif_context_write(heif_context*,
                               heif_writer* writer,
                               void* userdata);
 
+LIBHEIF_API
+heif_error heif_context_add_image(heif_context* ctx,
+                                  heif_image_handle* in_handle,
+                                  heif_image_handle** out_image_handle);
+
 #ifdef __cplusplus
 }
 #endif

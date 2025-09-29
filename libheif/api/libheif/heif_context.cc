@@ -288,3 +288,28 @@ struct heif_error heif_context_write(struct heif_context* ctx,
   }
 }
 
+struct heif_error heif_context_add_image(struct heif_context* ctx,
+                                         struct heif_image_handle* in_handle,
+                                         struct heif_image_handle** out_image_handle)
+{
+  auto addResult = ctx->context->add_image(in_handle->context, in_handle->image);
+  if (addResult.error) {
+    return addResult.error.error_struct(ctx->context.get());
+  }
+  std::shared_ptr<ImageItem> image = addResult.value;
+  
+  // mark the new image as primary image
+  if (ctx->context->is_primary_image_set() == false) {
+    ctx->context->set_primary_image(image);
+  }
+
+  if (out_image_handle) {
+    heif_image_handle *handle = new heif_image_handle;
+    handle->image = image;
+    handle->context = ctx->context;
+    *out_image_handle = handle;
+  }
+
+  return heif_error_success;
+}
+

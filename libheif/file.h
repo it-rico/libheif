@@ -234,6 +234,7 @@ public:
   static std::wstring convert_utf8_path_to_utf16(std::string pathutf8);
 #endif
 
+  void set_brand(heif_compression_format format, bool miaf_compatible);
 
   // --- sequences
 
