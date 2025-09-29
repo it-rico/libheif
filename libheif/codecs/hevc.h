@@ -81,7 +81,7 @@
   protected:
     Error parse(BitstreamRange& range) override;
 
-  private:
+  public:
     struct NalArray
     {
       uint8_t m_array_completeness;

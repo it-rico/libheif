@@ -105,6 +105,8 @@ public:
 
   std::shared_ptr<Box_ipma> get_ipma_box() const { return m_ipma_box; }
 
+  std::shared_ptr<Box_iloc> get_iloc_box() const { return m_iloc_box; }
+
   Error get_properties(heif_item_id imageID,
                        std::vector<std::shared_ptr<Box>>& properties) const;
 

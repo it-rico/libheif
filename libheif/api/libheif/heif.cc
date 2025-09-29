@@ -2795,6 +2795,32 @@ void heif_encoding_options_free(heif_encoding_options* options)
   delete options;
 }
 
+struct heif_error heif_context_add_image(struct heif_context* ctx,
+                                         struct heif_image_handle* in_handle,
+                                         struct heif_image_handle** out_image_handle)
+{
+  std::shared_ptr<HeifContext::Image> image;
+  Error err = ctx->context->add_image(in_handle->context, in_handle->image, image);
+
+  if (err != Error::Ok) {
+    return err.error_struct(ctx->context.get());
+  }
+
+  // mark the new image as primary image
+  if (ctx->context->is_primary_image_set() == false) {
+    ctx->context->set_primary_image(image);
+  }
+
+  if (out_image_handle) {
+    heif_image_handle *handle = new heif_image_handle;
+    handle->image = image;
+    handle->context = ctx->context;
+    *out_image_handle = handle;
+  }
+
+  return heif_error_success;
+}
+
 struct heif_error heif_context_encode_image(struct heif_context* ctx,
                                             const struct heif_image* input_image,
                                             struct heif_encoder* encoder,
