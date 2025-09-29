@@ -42,11 +42,18 @@
 #include <memory>
 #include <getopt.h>
 #include <assert.h>
+#include <stdio.h>
 
-int main(int argc, char** argv) {
+void tofile(uint8_t *data, size_t size, const char *path) {
+    FILE *file = fopen(path, "wb");
+    fwrite(data, size, 1, file);
+    fflush(file);
+    fclose(file);
+}
+
+void test(const char *in_path, const char *out_path) {
     heif_context *read_context = heif_context_alloc();
-//    heif_error error = heif_context_read_from_file(read_context, "/Users/jaelyn/Downloads/heics/input.heic", nullptr);
-    heif_error error = heif_context_read_from_file(read_context, "/Users/jaelyn/Downloads/heics/C034.heic", nullptr);
+    heif_error error = heif_context_read_from_file(read_context, in_path, nullptr);
     assert(error.code == heif_error_Ok);
     
     heif_context *write_context = heif_context_alloc();
@@ -59,21 +66,9 @@ int main(int argc, char** argv) {
         error = heif_context_get_image_handle(read_context, imageIds[i], &handle);
         assert(error.code == heif_error_Ok);
         
-        heif_image *image;
-        error = heif_decode_image(handle, &image, heif_colorspace_undefined, heif_chroma_undefined, nullptr);
-        assert(error.code == heif_error_Ok);
-        
-        heif_encoder *encoder;
-        heif_context_get_encoder_for_format(write_context, heif_compression_HEVC, &encoder);
-        
-        heif_encoding_options *options = heif_encoding_options_alloc();
-        options->save_alpha_channel = 0;
-        
         heif_image_handle *out_handle = nullptr;
-        error = heif_context_encode_image(write_context, image, encoder, options, &out_handle);
+        error = heif_context_add_image(write_context, handle, &out_handle);
         assert(error.code == heif_error_Ok);
-        
-        heif_image_release(image);
         
         int thumbnail_count = heif_image_handle_get_number_of_thumbnails(handle);
         heif_item_id thumbnail_ids[thumbnail_count];
@@ -83,20 +78,16 @@ int main(int argc, char** argv) {
             error = heif_image_handle_get_thumbnail(handle, thumbnail_ids[j], &thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            heif_image *thumbnail_image;
-            error = heif_decode_image(thumbnail_handle, &thumbnail_image, heif_colorspace_undefined, heif_chroma_undefined, nullptr);
-            assert(error.code == heif_error_Ok);
-            
             heif_image_handle *out_thumbnail_handle = nullptr;
-            error = heif_context_encode_thumbnail(write_context, thumbnail_image, out_handle, encoder, options, INT_MAX, &out_thumbnail_handle);
+            error = heif_context_add_image(write_context, thumbnail_handle, &out_thumbnail_handle);
             assert(error.code == heif_error_Ok);
             
-            heif_image_release(thumbnail_image);
+            error = heif_context_assign_thumbnail(write_context, out_handle, out_thumbnail_handle);
+            assert(error.code == heif_error_Ok);
+            
             heif_image_handle_release(thumbnail_handle);
             heif_image_handle_release(out_thumbnail_handle);
         }
-        heif_encoding_options_free(options);
-        heif_encoder_release(encoder);
         
         int metadata_count = heif_image_handle_get_number_of_metadata_blocks(handle, nullptr);
         heif_item_id metadata_ids[metadata_count];
@@ -119,10 +110,17 @@ int main(int argc, char** argv) {
         heif_image_handle_release(out_handle);
     }
     heif_context_free(read_context);
-    
-//    error = heif_context_write_to_file(write_context, "/Users/jaelyn/Downloads/heics/output.heic");
-    error = heif_context_write_to_file(write_context, "/Users/jaelyn/Downloads/heics/C034_out.heic");
+    error = heif_context_write_to_file(write_context, out_path);
     assert(error.code == heif_error_Ok);
     heif_context_free(write_context);
+}
+
+int main(int argc, char** argv) {
+//    test("/Users/jaelyn/Downloads/heics/input.heic", "/Users/jaelyn/Downloads/heics/output.heic");
+    //    test("/Users/jaelyn/Downloads/heics/C034.heic", "/Users/jaelyn/Downloads/heics/output.heic");
+    //    test("/Users/jaelyn/Downloads/heics/exif.heic", "/Users/jaelyn/Downloads/heics/exif_output.heic");
+//    test("/Users/jaelyn/Downloads/IMG_5050.HEIC", "/Users/jaelyn/Downloads/heics/IMG_5050_output.heic");
+    test("/Users/rico/Downloads/heics/input.heic", "/Users/rico/Downloads/heics/output.heic");
+//    test("/Users/jaelyn/Downloads/heics/output.heic", "/Users/jaelyn/Downloads/heics/output2.heic");
     return 0;
 }
