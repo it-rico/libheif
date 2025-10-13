@@ -165,6 +165,7 @@ void test_handle(const char *in_path, const char *out_path) {
     assert(error.code == heif_error_Ok);
     
     heif_context *write_context = heif_context_alloc();
+    
     int image_count = heif_context_get_number_of_top_level_images(read_context);
     heif_item_id imageIds[image_count];
     image_count = heif_context_get_list_of_top_level_image_IDs(read_context, imageIds, image_count);
@@ -265,10 +266,134 @@ void test_get_jpeg_data(const char *in_path, const char *jpeg_out_path) {
     free(jpeg_data.data);
 }
 
+void test_add_metadata(const char *in_path, const char *target_metadata_type, const char *metadata_path, const char *out_path) {
+    heif_context *read_context = heif_context_alloc();
+    heif_error error = heif_context_read_from_file(read_context, in_path, nullptr);
+    assert(error.code == heif_error_Ok);
+    
+    heif_context *write_context = heif_context_alloc();
+    
+    int image_count = heif_context_get_number_of_top_level_images(read_context);
+    heif_item_id imageIds[image_count];
+    image_count = heif_context_get_list_of_top_level_image_IDs(read_context, imageIds, image_count);
+    assert(image_count == 1);
+
+    heif_image_handle *handle = nullptr;
+    error = heif_context_get_image_handle(read_context, imageIds[0], &handle);
+    assert(error.code == heif_error_Ok);
+    
+    heif_image_handle *out_handle = nullptr;
+    error = heif_context_add_image(write_context, handle, &out_handle);
+    assert(error.code == heif_error_Ok);
+    
+    int thumbnail_count = heif_image_handle_get_number_of_thumbnails(handle);
+    heif_item_id thumbnail_ids[thumbnail_count];
+    thumbnail_count = heif_image_handle_get_list_of_thumbnail_IDs(handle, thumbnail_ids, thumbnail_count);
+    for (int j = 0; j < thumbnail_count; j++) {
+        heif_image_handle *thumbnail_handle = nullptr;
+        error = heif_image_handle_get_thumbnail(handle, thumbnail_ids[j], &thumbnail_handle);
+        assert(error.code == heif_error_Ok);
+        
+        heif_image_handle *out_thumbnail_handle = nullptr;
+        error = heif_context_add_image(write_context, thumbnail_handle, &out_thumbnail_handle);
+        assert(error.code == heif_error_Ok);
+        
+        error = heif_context_assign_thumbnail(write_context, out_handle, out_thumbnail_handle);
+        assert(error.code == heif_error_Ok);
+        
+        heif_image_handle_release(thumbnail_handle);
+        heif_image_handle_release(out_thumbnail_handle);
+    }
+    
+    int metadata_count = heif_image_handle_get_number_of_metadata_blocks(handle, nullptr);
+    heif_item_id metadata_ids[metadata_count];
+    metadata_count = heif_image_handle_get_list_of_metadata_block_IDs(handle, nullptr, metadata_ids, metadata_count);
+    for (int j = 0; j < metadata_count; j++) {
+        heif_item_id metadata_id = metadata_ids[j];
+        const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
+        const char *content_type = heif_image_handle_get_metadata_content_type(handle, metadata_id);
+        if (strcmp(metadata_type, target_metadata_type) == 0) {
+            continue;
+        }
+        size_t size = heif_image_handle_get_metadata_size(handle, metadata_id);
+        uint8_t data[size];
+        error = heif_image_handle_get_metadata(handle, metadata_id, data);
+        assert(error.code == heif_error_Ok);
+        error = heif_context_add_generic_metadata(write_context, out_handle, data, (int)size, metadata_type, content_type);
+        assert(error.code == heif_error_Ok);
+    }
+    size_t metadata_size = 0;
+    uint8_t *metadata = fromfile(metadata_path, &metadata_size);
+    
+    error = heif_context_add_generic_metadata(write_context, out_handle, metadata, (int)metadata_size, target_metadata_type, nullptr);
+    assert(error.code == heif_error_Ok);
+    
+    free(metadata);
+    
+    if (heif_image_handle_is_primary_image(handle)) {
+        heif_context_set_primary_image(write_context, out_handle);
+    }
+    heif_image_handle_release(handle);
+    heif_image_handle_release(out_handle);
+
+    heif_context_free(read_context);
+    error = heif_context_write_to_file(write_context, out_path);
+    assert(error.code == heif_error_Ok);
+    heif_context_free(write_context);
+}
+
+void test_get_metadata(const char *in_path, const char *target_metadata_type, const char *metadata_out_path) {
+    heif_context *read_context = heif_context_alloc();
+    heif_error error = heif_context_read_from_file(read_context, in_path, nullptr);
+    assert(error.code == heif_error_Ok);
+    
+    int image_count = heif_context_get_number_of_top_level_images(read_context);
+    heif_item_id imageIds[image_count];
+    image_count = heif_context_get_list_of_top_level_image_IDs(read_context, imageIds, image_count);
+    assert(image_count == 1);
+
+    heif_image_handle *handle = nullptr;
+    error = heif_context_get_image_handle(read_context, imageIds[0], &handle);
+    assert(error.code == heif_error_Ok);
+    
+    int count = heif_image_handle_get_number_of_metadata_blocks(handle, nullptr);
+    assert(count > 0);
+    
+    heif_item_id metadata_ids[count];
+    int filled_count = heif_image_handle_get_list_of_metadata_block_IDs(handle, nullptr, metadata_ids, count);
+    assert(filled_count == count);
+    for (int i = 0; i < count; i++) {
+        heif_item_id metadata_id = metadata_ids[i];
+        const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
+        if (strcmp(metadata_type, target_metadata_type) == 0) {
+            size_t size = heif_image_handle_get_metadata_size(handle, metadata_id);
+            uint8_t bytes[size];
+            error = heif_image_handle_get_metadata(handle, metadata_id, bytes);
+            assert(error.code == heif_error_Ok);
+            
+            tofile(bytes, size, metadata_out_path);
+            return;
+        }
+    }
+    assert(0);
+}
+
+void test_update_exif(const char *in_path, const char *exif_in_path, const char *out_path) {
+    test_add_metadata(in_path, "Exif", exif_in_path, out_path);
+}
+
+void test_get_exif(const char *in_path, const char *exif_out_path) {
+    test_get_metadata(in_path, "Exif", exif_out_path);
+}
+
 int main(int argc, char** argv) {
     test_code("../../../examples/C034.heic", "C034_code_out.heic");
     test_handle("../../../examples/C034.heic", "C034_handle_out.heic");
     test_add_jpeg_image("../../../examples/sample_1920×1280.jpeg", 1920, 1280, "sample_1920×1280_out.heic");
     test_get_jpeg_data("sample_1920×1280_out.heic", "sample_1920×1280_out.jpeg");
+    test_add_metadata("../../../examples/IMG_20240923_194805.HEIC", "Sub", "../../../examples/SubMetaData.jpeg", "IMG_20240923_194805_sub_out.heic");
+    test_get_metadata("IMG_20240923_194805_sub_out.heic", "Sub", "SubMetaData_out.jpeg");
+    test_update_exif("../../../examples/IMG_20240923_194805.HEIC", "../../../examples/IMG_20240923_194805.EXIF", "IMG_20240923_194805_out.heic");
+    test_get_exif("IMG_20240923_194805_out.heic", "IMG_20240923_194805_out.exif");
     return 0;
 }
