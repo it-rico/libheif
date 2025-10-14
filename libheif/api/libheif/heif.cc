@@ -4054,7 +4054,9 @@ struct heif_error heif_context_add_generic_metadata(struct heif_context* ctx,
                                                     const void* data, int size,
                                                     const char* item_type, const char* content_type)
 {
-  if (item_type == nullptr || strlen(item_type) != 4) {
+// TODO: 待还原
+//  if (item_type == nullptr || strlen(item_type) != 4) {
+  if (item_type == nullptr) {
     return {heif_error_Usage_error,
             heif_suberror_Invalid_parameter_value,
             "called heif_context_add_generic_metadata() with invalid 'item_type'."};
