@@ -36,6 +36,7 @@
 #endif
 
 #include <libheif/heif.h>
+#include <libheif/heif_items.h>
 
 #include <fstream>
 #include <iostream>
@@ -137,12 +138,15 @@ void test_code(const char *in_path, const char *out_path) {
         metadata_count = heif_image_handle_get_list_of_metadata_block_IDs(handle, nullptr, metadata_ids, metadata_count);
         for (int j = 0; j < metadata_count; j++) {
             heif_item_id metadata_id = metadata_ids[j];
+            const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
+            const char *content_type = heif_image_handle_get_metadata_content_type(handle, metadata_id);
+            if (strcmp(metadata_type, "tmap") == 0) {
+                continue;
+            }
             size_t size = heif_image_handle_get_metadata_size(handle, metadata_id);
             uint8_t data[size];
             error = heif_image_handle_get_metadata(handle, metadata_id, data);
             assert(error.code == heif_error_Ok);
-            const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
-            const char *content_type = heif_image_handle_get_metadata_content_type(handle, metadata_id);
             error = heif_context_add_generic_metadata(write_context, out_handle, data, (int)size, metadata_type, content_type);
             assert(error.code == heif_error_Ok);
         }
@@ -175,6 +179,24 @@ void test_handle(const char *in_path, const char *out_path) {
         error = heif_context_get_image_handle(read_context, imageIds[i], &handle);
         assert(error.code == heif_error_Ok);
         
+        heif_image_handle *gain_map_handle;
+        error = heif_image_handle_get_gain_map_image_handle(handle, &gain_map_handle);
+        if (error.code == heif_error_Ok) {
+            heif_item_id item_id = heif_image_handle_get_item_id(gain_map_handle);
+            int i = 0;
+            for (; i < image_count; i++) {
+                if (imageIds[i] == item_id) {
+                    break;
+                }
+            }
+            if (i < image_count) {
+                for (; i < image_count - 1; i++) {
+                    imageIds[i] = imageIds[i + 1];
+                }
+                image_count--;
+            }
+        }
+        
         heif_image_handle *out_handle = nullptr;
         error = heif_context_add_image(write_context, handle, &out_handle);
         assert(error.code == heif_error_Ok);
@@ -203,12 +225,15 @@ void test_handle(const char *in_path, const char *out_path) {
         metadata_count = heif_image_handle_get_list_of_metadata_block_IDs(handle, nullptr, metadata_ids, metadata_count);
         for (int j = 0; j < metadata_count; j++) {
             heif_item_id metadata_id = metadata_ids[j];
+            const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
+            const char *content_type = heif_image_handle_get_metadata_content_type(handle, metadata_id);
+            if (strcmp(metadata_type, "tmap") == 0) {
+                continue;
+            }
             size_t size = heif_image_handle_get_metadata_size(handle, metadata_id);
             uint8_t data[size];
             error = heif_image_handle_get_metadata(handle, metadata_id, data);
             assert(error.code == heif_error_Ok);
-            const char *metadata_type = heif_image_handle_get_metadata_type(handle, metadata_id);
-            const char *content_type = heif_image_handle_get_metadata_content_type(handle, metadata_id);
             error = heif_context_add_generic_metadata(write_context, out_handle, data, (int)size, metadata_type, content_type);
             assert(error.code == heif_error_Ok);
         }

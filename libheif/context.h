@@ -127,6 +127,8 @@ public:
 
   Result<std::shared_ptr<ImageItem>> add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image);
 
+  Error add_gain_image_from_image(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& target_base_image, std::shared_ptr<ImageItem>& base_image);
+  
   Result<std::shared_ptr<ImageItem>> add_jpeg_image(std::shared_ptr<HeifContext>& in_ctx,
                                                     const std::vector<uint8_t>& jpeg_data,
                                                     uint32_t width,

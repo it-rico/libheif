@@ -3732,6 +3732,8 @@ struct heif_error heif_context_encode_gain_map_image(
   altr_box->set_item_ids(ids);
   ctx->context->get_heif_file()->add_entity_group_box(altr_box);
 
+  ctx->context->get_heif_file()->get_ftyp_box()->add_compatible_brand(heif_brand2_tmap);
+  
   return heif_error_success;
 }
 

@@ -1255,6 +1255,12 @@ Result<std::shared_ptr<ImageItem>> HeifContext::add_image(std::shared_ptr<HeifCo
     return addResult.error;
   }
   std::shared_ptr<ImageItem> out_image = addResult.value;
+  
+  Error error = add_gain_image_from_image(in_ctx, out_image, in_image);
+  if (error) {
+    return error;
+  }
+  
   m_heif_file->set_brand(in_image->get_compression_format(), false);
   return out_image;
 }
@@ -1307,6 +1313,62 @@ Result<std::shared_ptr<ImageItem>> HeifContext::add_image_from_normal(std::share
   }
   
   return output_image_item;
+}
+
+
+Error HeifContext::add_gain_image_from_image(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& target_base_image, std::shared_ptr<ImageItem>& base_image)
+{
+  auto in_image = base_image->get_gain_map();
+  if (!in_image) {
+    return Error::Ok;
+  }
+  auto in_item = base_image->get_gain_map_metadata();
+  if (!in_item) {
+    return Error(heif_error_Invalid_input,
+                 heif_suberror_No_item_data,
+                 "base image handle is not associated with a gain map image");
+  }
+  
+  heif_item_id tmap_item_id = -1;
+  add_tmap_item(in_item->m_data, tmap_item_id);
+  
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_item->item_id, properties);
+  if (err) {
+    return err;
+  }
+  for (auto property : properties) {
+    bool is_essential = in_ctx->m_heif_file->get_ipco_box()->is_property_essential_for_item(in_item->item_id, property, in_ctx->m_heif_file->get_ipma_box());
+    m_heif_file->add_property(tmap_item_id, property, is_essential);
+  }
+  
+  auto gainmap_add_result = add_image(in_ctx, in_image);
+  if (gainmap_add_result.error) {
+    return gainmap_add_result.error;
+  }
+  std::shared_ptr<ImageItem> gain_map_image = gainmap_add_result.value;
+  m_heif_file->get_infe_box(gain_map_image->get_id())->set_item_name("GMap");
+  m_heif_file->get_infe_box(gain_map_image->get_id())->set_hidden_item(true);
+  Error error = link_gain_map(target_base_image, gain_map_image, tmap_item_id);
+  if (error != Error::Ok) {
+    return error;
+  }
+  
+  // --- generate altr box
+  auto altr_box = std::make_shared<Box_EntityToGroup>();
+  altr_box->set_short_type(fourcc("altr"));
+  altr_box->set_group_id(m_heif_file->get_unused_item_id());
+
+  std::vector<heif_item_id> ids;
+  ids.push_back(tmap_item_id);
+  ids.push_back(target_base_image->get_id());
+
+  altr_box->set_item_ids(ids);
+  m_heif_file->add_entity_group_box(altr_box);
+
+  m_heif_file->get_ftyp_box()->add_compatible_brand(heif_brand2_tmap);
+
+  return Error::Ok;
 }
 
 
