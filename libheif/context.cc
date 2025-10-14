@@ -1224,6 +1224,143 @@ Error HeifContext::link_gain_map(const std::shared_ptr<ImageItem>& primary_image
 #endif
 
 
+Result<std::shared_ptr<ImageItem>> HeifContext::add_image(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image)
+{
+  ;
+  Result<std::shared_ptr<ImageItem>> addResult;
+  if (in_image->get_infe_type() == fourcc("grid")) {
+    addResult = add_image_from_grid(in_ctx, in_image);
+  } else {
+    addResult = add_image_from_normal(in_ctx, in_image);
+  }
+  if (addResult.error) {
+    return addResult.error;
+  }
+  std::shared_ptr<ImageItem> out_image = addResult.value;
+  m_heif_file->set_brand(in_image->get_compression_format(), false);
+  return out_image;
+}
+
+
+Result<std::shared_ptr<ImageItem>> HeifContext::add_image_from_normal(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image)
+{
+  std::shared_ptr<ImageItem> output_image_item = ImageItem::alloc_for_compression_format(this, in_image->get_compression_format());
+
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+  
+  output_image_item->set_size(in_image->get_width(), in_image->get_height());
+  
+  auto infe_box = m_heif_file->add_new_infe_box(output_image_item->get_infe_type());
+  heif_item_id image_id = infe_box->get_item_ID();
+  output_image_item->set_id(image_id);
+  
+  std::vector<uint8_t> data;
+  heif_metadata_compression compression;
+  err = in_ctx->m_heif_file->get_item_data(in_image->get_id(), &data, &compression);
+  if (err) {
+    return err;
+  }
+  // 0=mdat 1=idat
+  m_heif_file->append_iloc_data(image_id, data, 0);
+  
+  for (auto property : properties) {
+    bool is_essential = in_ctx->m_heif_file->get_ipco_box()->is_property_essential_for_item(in_image->get_id(), property, in_ctx->m_heif_file->get_ipma_box());
+    m_heif_file->add_property(image_id, property, is_essential);
+  }
+  
+  if (std::find(in_ctx->m_top_level_images.begin(), in_ctx->m_top_level_images.end(), in_image) != in_ctx->m_top_level_images.end()) {
+    m_top_level_images.push_back(output_image_item);
+  }
+  insert_image_item(image_id, output_image_item);
+  
+  properties.clear();
+  err = m_heif_file->get_properties(output_image_item->get_id(), properties);
+  if (err) {
+    return err;
+  }
+  output_image_item->set_properties(properties);
+  
+  if (!in_image->is_miaf_compatible()) {
+    output_image_item->mark_not_miaf_compatible();
+  }
+  
+  return output_image_item;
+}
+
+
+Result<std::shared_ptr<ImageItem>> HeifContext::add_image_from_grid(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image)
+{
+  auto in_iref_box = in_ctx->m_heif_file->get_iref_box();
+  if (!in_iref_box) {
+    return Error(heif_error_Invalid_input,
+                 heif_suberror_No_iref_box,
+                 "No iref box available, but needed for grid image");
+  }
+  std::vector<heif_item_id> in_image_references = in_iref_box->get_references(in_image->get_id(), fourcc("dimg"));
+  std::vector<heif_item_id> tile_ids;
+  
+  std::vector<std::shared_ptr<Box>> properties;
+  Error err = in_ctx->m_heif_file->get_properties(in_image->get_id(), properties);
+  if (err) {
+    return err;
+  }
+
+  for (heif_item_id in_reference: in_image_references) {
+    auto iter = in_ctx->m_all_images.find(in_reference);
+    if (iter == in_ctx->m_all_images.end()) {
+      return Error(heif_error_Invalid_input,
+                   heif_suberror_Missing_grid_images,
+                   "Nonexistent grid image referenced");
+    }
+    std::shared_ptr<ImageItem> in_tile = iter->second;
+    auto addResult = add_image(in_ctx, in_tile);
+    if (addResult.error) {
+      return addResult.error;
+    }
+    std::shared_ptr<ImageItem> out_tile = addResult.value;
+    
+    heif_item_id tile_id = out_tile->get_id();
+    m_heif_file->get_infe_box(tile_id)->set_hidden_item(true);
+    tile_ids.push_back(tile_id);
+  }
+  
+  heif_item_id grid_id = m_heif_file->add_new_image(fourcc("grid"));
+  std::shared_ptr<ImageItem> output_image_item = std::make_shared<ImageItem_Grid>(this, grid_id);
+  if (std::find(in_ctx->m_top_level_images.begin(), in_ctx->m_top_level_images.end(), in_image) != in_ctx->m_top_level_images.end()) {
+    m_top_level_images.push_back(output_image_item);
+  }
+  insert_image_item(grid_id, output_image_item);
+  
+  std::vector<uint8_t> grid_data;
+  err = in_ctx->m_heif_file->get_uncompressed_item_data(in_image->get_id(), &grid_data);
+  if (err) {
+    return err;
+  }
+  
+  ImageGrid grid;
+  grid.parse(grid_data);
+  const int construction_method = 1; // 0=mdat 1=idat
+  m_heif_file->append_iloc_data(grid_id, grid_data, construction_method);
+  
+  for (auto property : properties) {
+    bool is_essential = in_ctx->m_heif_file->get_ipco_box()->is_property_essential_for_item(in_image->get_id(), property, in_ctx->m_heif_file->get_ipma_box());
+    m_heif_file->add_property(grid_id, property, is_essential);
+  }
+  
+  m_heif_file->add_iref_reference(grid_id, fourcc("dimg"), tile_ids);
+  
+  if (!in_image->is_miaf_compatible()) {
+    output_image_item->mark_not_miaf_compatible();
+  }
+  
+  return output_image_item;
+}
+
+
 Result<std::shared_ptr<ImageItem>> HeifContext::encode_image(const std::shared_ptr<HeifPixelImage>& pixel_image,
                                 struct heif_encoder* encoder,
                                 const struct heif_encoding_options& in_options,
