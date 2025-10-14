@@ -45,6 +45,21 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+uint8_t *fromfile(const char *path, size_t *size) {
+    FILE *file = fopen(path, "rb");
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    uint8_t *data = (uint8_t *)malloc(fsize);
+    size_t read_bytes = fread(data, 1, fsize, file);
+    assert(read_bytes == (size_t)fsize);
+    
+    fclose(file);
+    *size = fsize;
+    return data;
+}
+
 void tofile(uint8_t *data, size_t size, const char *path) {
     FILE *file = fopen(path, "wb");
     fwrite(data, size, 1, file);
@@ -208,8 +223,52 @@ void test_handle(const char *in_path, const char *out_path) {
     heif_context_free(write_context);
 }
 
+void test_add_jpeg_image(const char *jpeg_in_path, int width, int height, const char *out_path) {
+    heif_context *write_context = heif_context_alloc();
+    heif_image_handle *out_handle = nullptr;
+    
+    heif_jpeg_data jpeg_data;
+    jpeg_data.data = fromfile(jpeg_in_path, &jpeg_data.size);
+    jpeg_data.width = width;
+    jpeg_data.height = height;
+    
+    heif_error error = heif_context_add_jpeg_image(write_context, &jpeg_data, &out_handle);
+    assert(error.code == heif_error_Ok);
+    free(jpeg_data.data);
+    
+    heif_image_handle_release(out_handle);
+    
+    error = heif_context_write_to_file(write_context, out_path);
+    assert(error.code == heif_error_Ok);
+    heif_context_free(write_context);
+}
+
+void test_get_jpeg_data(const char *in_path, const char *jpeg_out_path) {
+    heif_context *read_context = heif_context_alloc();
+    heif_error error = heif_context_read_from_file(read_context, in_path, nullptr);
+    assert(error.code == heif_error_Ok);
+    
+    int image_count = heif_context_get_number_of_top_level_images(read_context);
+    heif_item_id imageIds[image_count];
+    image_count = heif_context_get_list_of_top_level_image_IDs(read_context, imageIds, image_count);
+    assert(image_count > 0);
+
+    heif_image_handle *handle = nullptr;
+    error = heif_context_get_image_handle(read_context, imageIds[0], &handle);
+    assert(error.code == heif_error_Ok);
+    
+    struct heif_jpeg_data jpeg_data;
+    error = heif_get_jpeg_data(handle, &jpeg_data);
+    assert(error.code == heif_error_Ok);
+    
+    tofile(jpeg_data.data, jpeg_data.size, jpeg_out_path);
+    free(jpeg_data.data);
+}
+
 int main(int argc, char** argv) {
     test_code("../../../examples/C034.heic", "C034_code_out.heic");
     test_handle("../../../examples/C034.heic", "C034_handle_out.heic");
+    test_add_jpeg_image("../../../examples/sample_1920×1280.jpeg", 1920, 1280, "sample_1920×1280_out.heic");
+    test_get_jpeg_data("sample_1920×1280_out.heic", "sample_1920×1280_out.jpeg");
     return 0;
 }
