@@ -2034,10 +2034,10 @@ Error Box_iloc::write_mdat_after_iloc(StreamWriter& writer)
 
   for (auto& item : m_items) {
     if (item.construction_method == 0) {
-      item.base_offset = writer.get_position();
+      item.base_offset = 0;
 
       for (auto& extent : item.extents) {
-        extent.offset = writer.get_position() - item.base_offset;
+        extent.offset = writer.get_position();
         //extent.length = extent.data.size();
 
         if (m_use_tmpfile) {
