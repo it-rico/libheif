@@ -783,7 +783,7 @@ Error HeifFile::get_item_data(heif_item_id ID, std::vector<uint8_t>* out_data, h
 // TODO: we should use a acquire() / release() approach here so that we can get multiple IDs before actually creating infe boxes
 heif_item_id HeifFile::get_unused_item_id() const
 {
-  heif_item_id max_id = 0;
+  heif_item_id max_id = 9999;
 
   // TODO: replace with better algorithm and data-structure
 
