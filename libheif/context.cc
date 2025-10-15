@@ -1350,7 +1350,8 @@ Error HeifContext::add_gain_image_from_image(std::shared_ptr<HeifContext>& in_ct
   }
   std::shared_ptr<ImageItem> gain_map_image = gainmap_add_result.value;
   m_heif_file->get_infe_box(gain_map_image->get_id())->set_item_name("GMap");
-  m_heif_file->get_infe_box(gain_map_image->get_id())->set_hidden_item(true);
+//  m_heif_file->get_infe_box(gain_map_image->get_id())->set_hidden_item(true);
+  m_heif_file->get_infe_box(tmap_item_id)->set_hidden_item(true);
   Error error = link_gain_map(target_base_image, gain_map_image, tmap_item_id);
   if (error != Error::Ok) {
     return error;
