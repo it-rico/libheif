@@ -1931,6 +1931,7 @@ void Box_iloc::derive_box_version()
 
   m_offset_size = 4;
   m_length_size = 4;
+  m_base_offset_size = 0;
   //m_base_offset_size = 4; // set above
   m_index_size = 0;
 
