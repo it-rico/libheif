@@ -854,14 +854,16 @@ Error HeifContext::interpret_heif_file()
           auto ipco = m_heif_file->get_ipco_box();
           auto derived_image_colr = ipco->get_property_for_item_ID(id, ipma, fourcc("colr"));
           auto colr = std::dynamic_pointer_cast<Box_colr>(derived_image_colr);
-          auto nclx =
-              std::dynamic_pointer_cast<const color_profile_nclx>(colr->get_color_profile());
-          if (nclx) {
-            baseItem->set_derived_img_color_profile(nclx);
-          }
-          auto raw = std::dynamic_pointer_cast<const color_profile_raw>(colr->get_color_profile());
-          if (raw) {
-            baseItem->set_derived_img_color_profile(raw);
+          if (colr) {
+            auto nclx =
+                std::dynamic_pointer_cast<const color_profile_nclx>(colr->get_color_profile());
+            if (nclx) {
+              baseItem->set_derived_img_color_profile(nclx);
+            }
+            auto raw = std::dynamic_pointer_cast<const color_profile_raw>(colr->get_color_profile());
+            if (raw) {
+              baseItem->set_derived_img_color_profile(raw);
+            }
           }
         }
       }
