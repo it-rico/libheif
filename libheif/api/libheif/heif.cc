@@ -657,7 +657,7 @@ struct heif_error heif_context_get_primary_image_ID(struct heif_context* ctx, he
 }
 
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
 
 struct heif_error heif_image_handle_get_gain_map_image_handle(
     const struct heif_image_handle* handle, struct heif_image_handle** gain_map_handle) {
@@ -772,7 +772,7 @@ struct heif_error heif_image_handle_get_derived_image_raw_color_profile(
   return Error::Ok.error_struct(handle->image.get());
 }
 
-#endif
+//#endif
 
 
 int heif_context_is_top_level_image_ID(struct heif_context* ctx, heif_item_id id)
@@ -3623,7 +3623,7 @@ struct heif_error heif_context_encode_image(struct heif_context* ctx,
 }
 
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
 
 struct heif_error heif_context_encode_gain_map_image(
     struct heif_context* ctx, const struct heif_image_handle* base_image_handle,
@@ -3737,7 +3737,7 @@ struct heif_error heif_context_encode_gain_map_image(
   return heif_error_success;
 }
 
-#endif
+//#endif
 
 
 struct heif_error heif_context_encode_grid(struct heif_context* ctx,

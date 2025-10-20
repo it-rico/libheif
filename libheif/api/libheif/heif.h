@@ -1460,7 +1460,7 @@ struct heif_error heif_image_handle_get_auxiliary_image_handle(const struct heif
                                                                heif_item_id auxiliary_id,
                                                                struct heif_image_handle** out_auxiliary_handle);
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
 
 // ------------------------- gain map images -------------------------
 
@@ -1495,7 +1495,7 @@ LIBHEIF_API
 struct heif_error heif_image_handle_get_derived_image_raw_color_profile(
     const struct heif_image_handle* handle, void* out_data);
 
-#endif
+//#endif
 
 // ------------------------- metadata (Exif / XMP) -------------------------
 
@@ -2682,7 +2682,7 @@ int heif_encoder_descriptor_supportes_lossless_compression(const struct heif_enc
 
 
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
 
 // Compress the gain map image and write metadata.
 // Returns a handle to the coded image in 'out_image_handle' unless out_image_handle = NULL.
@@ -2694,7 +2694,7 @@ struct heif_error heif_context_encode_gain_map_image(
     int gain_map_metadata_len, const struct heif_color_profile_nclx* derived_image_nclx,
     struct heif_image_handle** out_image_handle);
 
-#endif
+//#endif
 
 
 #ifdef __cplusplus

@@ -87,9 +87,9 @@ public:
     m_alpha_channel.reset();
     m_depth_channel.reset();
     m_aux_images.clear();
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
     m_gain_map_image.reset();
-#endif
+//#endif
   }
 
   HeifContext* get_context() { return m_heif_context; }
@@ -266,7 +266,7 @@ public:
     }
   }
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
   // --- gain map
 
   const std::shared_ptr<ImageItem>& get_gain_map() const { return m_gain_map_image; }
@@ -303,7 +303,7 @@ public:
       m_derived_img_color_profile_nclx = std::move(nclx);
     }
   };
-#endif
+//#endif
 
   // --- metadata
 
@@ -457,18 +457,18 @@ private:
   std::string m_aux_image_type;
   std::vector<std::shared_ptr<ImageItem>> m_aux_images;
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
   std::shared_ptr<ImageItem> m_gain_map_image;
-#endif
+//#endif
 
   std::vector<std::shared_ptr<ImageMetadata>> m_metadata;
 
   std::shared_ptr<const color_profile_nclx> m_color_profile_nclx;
   std::shared_ptr<const color_profile_raw> m_color_profile_icc;
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
   std::shared_ptr<const color_profile_nclx> m_derived_img_color_profile_nclx;
   std::shared_ptr<const color_profile_raw> m_derived_img_color_profile_icc;
-#endif
+//#endif
 
   bool m_miaf_compatible = true;
 

@@ -353,9 +353,9 @@ Error HeifFile::parse_heif_file()
 #if ENABLE_EXPERIMENTAL_MINI_FORMAT
       !(m_ftyp_box->get_major_brand() == heif_brand2_mif3) &&
 #endif
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
       !(m_ftyp_box->get_major_brand() == heif_brand2_tmap) &&
-#endif
+//#endif
       !m_ftyp_box->has_compatible_brand(heif_brand2_jpeg)) {
     std::stringstream sstr;
     sstr << "File does not include any supported brands.\n";

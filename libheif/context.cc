@@ -332,9 +332,9 @@ Error HeifContext::interpret_heif_file()
   // --- reference all non-hidden images
 
   std::vector<heif_item_id> image_IDs = m_heif_file->get_item_IDs();
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
   bool check_tmap_item = m_heif_file->get_ftyp_box()->has_compatible_brand(heif_brand2_tmap);
-#endif
+//#endif
 
   for (heif_item_id id : image_IDs) {
     auto infe_box = m_heif_file->get_infe_box(id);
@@ -801,12 +801,12 @@ Error HeifContext::interpret_heif_file()
         // these item types should have data
         return err;
       }
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
       else if (check_tmap_item && item_type == fourcc("tmap")) {
         // this also should have data
         return err;
       }
-#endif
+//#endif
       else {
         // anything else is probably something that we don't understand yet
         continue;
@@ -831,7 +831,7 @@ Error HeifContext::interpret_heif_file()
         }
         img_iter->second->add_metadata(metadata);
       }
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
       if (check_tmap_item && item_type == fourcc("tmap")) {
         std::vector<heif_item_id> image_references = iref_box->get_references(id, fourcc("dimg"));
         // "'tmap' item MUST be associated with 2 references to images"
@@ -865,7 +865,7 @@ Error HeifContext::interpret_heif_file()
           }
         }
       }
-#endif
+//#endif
     }
   }
 
@@ -1219,7 +1219,7 @@ create_alpha_image_from_image_alpha_channel(const std::shared_ptr<HeifPixelImage
 }
 
 
-#if WITH_EXPERIMENTAL_GAIN_MAP
+//#if WITH_EXPERIMENTAL_GAIN_MAP
 Error HeifContext::add_tmap_item(const std::vector<uint8_t>& data, heif_item_id& item_id) {
   auto tmap_infe = m_heif_file->add_new_infe_box(fourcc("tmap"));  // gain map metadata
   tmap_infe->set_item_name("GMap");
@@ -1239,7 +1239,7 @@ Error HeifContext::link_gain_map(const std::shared_ptr<ImageItem>& primary_image
 
   return Error::Ok;
 }
-#endif
+//#endif
 
 
 Result<std::shared_ptr<ImageItem>> HeifContext::add_image(std::shared_ptr<HeifContext>& in_ctx, std::shared_ptr<ImageItem>& in_image)
